@@ -32,6 +32,9 @@ class DeviseCreateUsers < ActiveRecord::Migration
 
 
       t.timestamps null: false
+
+      ## 認証トークン
+      t.string :authentication_token
     end
 
     add_index :users, :email,                unique: true
