@@ -5,4 +5,14 @@ class ApplicationController < ActionController::Base
 
   # jsonでのリクエストの場合CSRFトークンの検証をスキップ
   skip_before_action :verify_authenticity_token, if: -> {request.format.json?}
+  # トークンによる認証
+  before_action      :authenticate_user_from_token!, if: -> {params[:email].present?}
+
+  # トークンによる認証(メソッド)
+  def authenticate_user_from_token!
+    user = User.find_by(email: params[:email])
+    if Devise.secure_compare(user.try(:authentication_token), params[:token])
+      sign_in user, store: false
+    end
+  end
 end
