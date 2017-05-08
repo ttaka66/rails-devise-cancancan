@@ -15,4 +15,12 @@ class ApplicationController < ActionController::Base
       sign_in user, store: false
     end
   end
+
+  # 権限無しのリソースにアクセスしようとした場合
+  rescue_from CanCan::AccessDenied do |exception|
+    respond_to do |format|
+      format.html { redirect_to main_app.root_url, alert: exception.message }
+      format.json { render json: {message: exception.message}, status: :unauthorized }
+    end
+  end
 end
