@@ -119,7 +119,7 @@ end
 
 ## コントローラー
 
-JSONのリクエストの場合CSRFの検証をしない
+JSONのリクエストの場合CSRFの検証せずトークンにより認証する
 
 ```
 # app/controllers/application_controller.rb
@@ -128,6 +128,25 @@ class ApplicationController < ActionController::Base
   ...
   # jsonでのリクエストの場合CSRFトークンの検証をスキップ
   skip_before_action :verify_authenticity_token, if: -> {request.format.json?}
+
+  # トークンによる認証
+  before_action      :authenticate_user_from_token!, if: -> {params[:email].present?}
+
+  # トークンによる認証(メソッド)
+  def authenticate_user_from_token!
+    user = User.find_by(email: params[:email])
+    if Devise.secure_compare(user.try(:authentication_token), params[:token])
+      sign_in user, store: false
+    end
+  end
+
+  # 権限無しのリソースにアクセスしようとした場合
+  rescue_from CanCan::AccessDenied do |exception|
+    respond_to do |format|
+      format.html { redirect_to main_app.root_url, alert: exception.message }
+      format.json { render json: {message: exception.message}, status: :unauthorized }
+    end
+  end
   ...
 end
 ```
@@ -155,12 +174,12 @@ class SessionsController < Devise::SessionsController
 end
 ```
 
-ビューの編集
-```
-$ rails g devise:views users
-```
-
 abilityの作成
 ```
 $ rails g cancan:ability
+```
+
+ビューの編集
+```
+$ rails g devise:views users
 ```
