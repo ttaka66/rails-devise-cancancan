@@ -1,7 +1,9 @@
 class HelloController < ApplicationController
-  # authorize_resource
   def index
     authorize! :read, :hello
-    render text: "hello"
+    respond_to do |format|
+      format.html { render text: 'hello' }
+      format.json { render json: {hello: 'hello'} }
+    end
   end
 end
